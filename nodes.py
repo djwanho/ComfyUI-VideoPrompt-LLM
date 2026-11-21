@@ -203,7 +203,7 @@ def _maybe_unload_comfyui_models(policy: str) -> None:
 
 class MiniMaxH3VideoLLMLoader:
     DESCRIPTION = (
-        "Analyze chronological frames from a ComfyUI VIDEO with a local vision LLM and output a "
+        "Analyze chronological frames from a ComfyUI VIDEO or IMAGE batch with a local vision LLM and output a "
         "MiniMax H3 base-format prompt. A Custom System Prompt replaces the bundled H3 instruction."
     )
 
@@ -252,9 +252,15 @@ class MiniMaxH3VideoLLMLoader:
                 "prompt": (
                     "STRING", {"default": "", "multiline": True, "dynamicPrompts": False}
                 ),
-                "video": ("VIDEO", {"forceInput": True}),
             },
             "optional": {
+                "video": (
+                    "VIDEO",
+                    {
+                        "forceInput": True,
+                        "tooltip": "Optional VIDEO input. When both VIDEO and IMAGE are connected, VIDEO takes priority.",
+                    },
+                ),
                 "image_frames": (
                     "IMAGE",
                     {
