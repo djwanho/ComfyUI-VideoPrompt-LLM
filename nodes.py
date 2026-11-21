@@ -47,9 +47,7 @@ def _send_progress(node_id: str, **payload: Any) -> None:
 async def _handle_models(request):
     try:
         payload = await request.json()
-        client = VisionLLMClient(
-            str(payload.get("provider") or PROVIDER_OLLAMA), str(payload.get("server_url") or "")
-        )
+        client = VisionLLMClient(str(payload.get("provider") or PROVIDER_OLLAMA), "")
         models = await asyncio.to_thread(client.list_models)
         return _json_response({"models": models})
     except Exception as exc:
@@ -68,9 +66,7 @@ async def _handle_stop(request):
 async def _handle_unload(request):
     try:
         payload = await request.json()
-        client = VisionLLMClient(
-            str(payload.get("provider") or PROVIDER_OLLAMA), str(payload.get("server_url") or "")
-        )
+        client = VisionLLMClient(str(payload.get("provider") or PROVIDER_OLLAMA), "")
         model = str(payload.get("model") or "").strip()
         if not model or model == MODEL_PLACEHOLDER:
             raise ValueError("Select an installed model before unloading.")
@@ -216,8 +212,8 @@ class MiniMaxH3VideoLLMLoader:
         return {
             "required": {
                 "provider": (list(PROVIDERS), {"default": PROVIDERS[0]}),
-                "server_url": ("STRING", {"default": "http://127.0.0.1:11434"}),
-                "model": ([MODEL_PLACEHOLDER], {"default": MODEL_PLACEHOLDER}),
+                "ollama_model": ([MODEL_PLACEHOLDER], {"default": MODEL_PLACEHOLDER}),
+                "lm_studio_model": ([MODEL_PLACEHOLDER], {"default": MODEL_PLACEHOLDER}),
                 "thinking": ("BOOLEAN", {"default": False}),
                 "seed": ("INT", {"default": 1, "min": 0, "max": 0xFFFFFFFF, "step": 1}),
                 "seed_mode": (["Fixed", "Increment", "Decrement", "Randomize"], {"default": "Fixed"}),
@@ -256,9 +252,9 @@ class MiniMaxH3VideoLLMLoader:
                 "prompt": (
                     "STRING", {"default": "", "multiline": True, "dynamicPrompts": False}
                 ),
+                "video": ("VIDEO", {"forceInput": True}),
             },
             "optional": {
-                "video": ("VIDEO", {"forceInput": True}),
                 "image_frames": (
                     "IMAGE",
                     {
@@ -276,8 +272,10 @@ class MiniMaxH3VideoLLMLoader:
     CATEGORY = "DJwanho / LLM"
 
     @classmethod
-    def VALIDATE_INPUTS(cls, model=None, **kwargs):
-        value = str(model or "").strip()
+    def VALIDATE_INPUTS(cls, provider=None, ollama_model=None, lm_studio_model=None, **kwargs):
+        active_provider = str(provider or PROVIDERS[0])
+        active_model = lm_studio_model if active_provider == "LM Studio" else ollama_model
+        value = str(active_model or "").strip()
         if not value or value == MODEL_PLACEHOLDER:
             return "Press Refresh Models and select a vision-capable model."
         return True
@@ -289,8 +287,8 @@ class MiniMaxH3VideoLLMLoader:
     def analyze(
         self,
         provider: str,
-        server_url: str,
-        model: str,
+        ollama_model: str,
+        lm_studio_model: str,
         thinking: bool,
         seed: int,
         seed_mode: str,
@@ -317,7 +315,8 @@ class MiniMaxH3VideoLLMLoader:
         custom = str(custom_system_prompt or "").strip()
         system_prompt = custom if custom else _default_system_prompt()
         using_default = not bool(custom)
-        client = VisionLLMClient(provider, server_url)
+        model = str(lm_studio_model if provider == "LM Studio" else ollama_model).strip()
+        client = VisionLLMClient(provider, "")
         _maybe_unload_comfyui_models(unload_comfyui_models)
         frame_chunks = list(chunks(prepared.frames, MAX_IMAGES_PER_REQUEST))
         responses: List[str] = []

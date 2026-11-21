@@ -38,8 +38,8 @@ ComfyUI를 다시 시작한 뒤 `DJwanho / LLM` 카테고리에서
 ## Ollama 연결
 
 1. Provider를 `Ollama`로 선택합니다.
-2. 기본 서버 `http://127.0.0.1:11434`를 사용하거나 실제 사설 LAN IP를 입력합니다.
-3. `Refresh Models`를 눌러 설치 모델을 조회합니다.
+2. 노드가 기본 서버 `http://127.0.0.1:11434`를 내부에서 자동 사용합니다. 주소 입력란은 없습니다.
+3. 노드를 추가하면 설치된 모델이 `Ollama Model` 드롭다운에 자동 표시됩니다. 필요하면 `Refresh Models`로 다시 조회합니다.
 4. 반드시 **멀티이미지 Vision 입력을 지원하는 모델**을 선택합니다.
 
 노드는 `/api/tags`, `/api/chat`, `/api/generate`를 사용합니다. 특정 모델을 하드코딩하지 않으며,
@@ -47,10 +47,9 @@ ComfyUI를 다시 시작한 뒤 `DJwanho / LLM` 카테고리에서
 
 ## LM Studio 연결
 
-Provider를 `LM Studio`로 바꾸면 기본 주소가 `http://127.0.0.1:1234`로 변경됩니다. 모델 조회에는
+Provider를 `LM Studio`로 바꾸면 기본 주소 `http://127.0.0.1:1234`를 내부에서 자동 사용합니다. 모델 조회에는
 `/v1/models`, 생성에는 `/v1/chat/completions`를 사용합니다. Thinking 제어 필드를 서버가 거부하면
 한 번 제거해 재시도합니다. LM Studio 버전에 따라 `/api/v1/models/unload` 지원 여부가 다를 수 있습니다.
-서버 주소 끝의 `/v1`은 입력할 수 있으며 내부에서 중복 경로가 생기지 않도록 제거됩니다.
 
 ## VIDEO 입력과 IMAGE 배치 호환
 
@@ -78,6 +77,9 @@ Provider를 `LM Studio`로 바꾸면 기본 주소가 `http://127.0.0.1:1234`로
 
 Custom System Prompt가 비어 있으면 `prompts/minimax_h3_default.txt`가 자동 적용됩니다. 출력 순서는
 공식 기본 가이드의 다음 세 필드를 유지합니다.
+
+따라서 ComfyUI 기본 `Load Video` 노드의 `VIDEO` 출력을 연결하고 Vision 모델만 선택하면,
+`System Prompt / Custom`과 `Prompt`가 모두 비어 있어도 기본 MiniMax H3 영상 프롬프트를 자동 생성합니다.
 
 ```text
 integrated_multimodal_description: [Shot 1] ...
