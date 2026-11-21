@@ -108,7 +108,20 @@ class VisionLLMClient:
                 raise RuntimeError(_error_detail(response))
             items = response.json().get("models", [])
             names = {str(item.get("model") or item.get("name") or "").strip() for item in items if item}
-            return sorted(name for name in names if name)
+            vision_models: List[str] = []
+            for name in sorted(name for name in names if name):
+                try:
+                    show = requests.post(
+                        f"{self.base_url}/api/show",
+                        json={"model": name},
+                        timeout=15,
+                        allow_redirects=False,
+                    )
+                    if show.ok and "vision" in (show.json().get("capabilities") or []):
+                        vision_models.append(name)
+                except requests.RequestException:
+                    continue
+            return vision_models
         response = requests.get(f"{self.base_url}/v1/models", timeout=15, allow_redirects=False)
         if not response.ok:
             raise RuntimeError(_error_detail(response))
@@ -158,13 +171,24 @@ class VisionLLMClient:
         event = _register_response(request_id, response)
         try:
             if not response.ok:
-                raise RuntimeError(f"{self.provider} API error {response.status_code}: {_error_detail(response)}")
+                detail = _error_detail(response)
+                if self.provider == PROVIDER_OLLAMA and "image input is not supported" in detail.lower():
+                    model = str(payload.get("model") or "the selected model")
+                    raise RuntimeError(
+                        f'Ollama model "{model}" cannot accept image frames in its current installation. '
+                        "Choose another Ollama Model with working vision support, or reinstall/rebuild "
+                        "this model with its required mmproj file."
+                    )
+                raise RuntimeError(f"{self.provider} API error {response.status_code}: {detail}")
             for raw_line in response.iter_lines(decode_unicode=True):
                 if event.is_set():
                     raise RuntimeError("LLM generation was stopped by the user.")
                 if not raw_line:
                     continue
-                line = raw_line.strip()
+                if isinstance(raw_line, bytes):
+                    line = raw_line.decode(response.encoding or "utf-8", errors="replace").strip()
+                else:
+                    line = str(raw_line).strip()
                 if line.startswith("data:"):
                     line = line[5:].strip()
                 if line == "[DONE]":

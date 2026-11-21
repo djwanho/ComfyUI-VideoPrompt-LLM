@@ -42,8 +42,10 @@ ComfyUI를 다시 시작한 뒤 `DJwanho / LLM` 카테고리에서
 3. 노드를 추가하면 설치된 모델이 `Ollama Model` 드롭다운에 자동 표시됩니다. 필요하면 `Refresh Models`로 다시 조회합니다.
 4. 반드시 **멀티이미지 Vision 입력을 지원하는 모델**을 선택합니다.
 
-노드는 `/api/tags`, `/api/chat`, `/api/generate`를 사용합니다. 특정 모델을 하드코딩하지 않으며,
-목록에 나타난다는 사실만으로 Vision 지원이 보장되지는 않습니다.
+노드는 `/api/tags`, `/api/show`, `/api/chat`, `/api/generate`를 사용합니다. `/api/show`가 `vision`
+capability를 보고하는 모델만 드롭다운에 표시합니다. 다만 잘못 빌드된 커스텀 모델은 vision으로
+표시돼도 필수 `mmproj`가 없어 이미지 입력을 거부할 수 있으므로, 이 경우 다른 Vision 모델을
+선택하거나 해당 모델을 올바른 멀티모달 파일로 다시 구성해야 합니다.
 
 ## LM Studio 연결
 
